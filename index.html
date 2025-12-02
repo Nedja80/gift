@@ -4,55 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>$GIFT - The Gift of Crypto</title>
-    <!-- Tailwind CSS CDN -->
+    <!-- Tailwind CSS CDN per styling moderno e responsive -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons CDN (per le icone X, Send, Copy, ecc.) -->
+    <!-- Lucide Icons CDN per icone vettoriali moderne (X, Send, Copy, etc.) -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Configurazione Tailwind per stili personalizzati -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'crypto-yellow': '#ffd700',
-                        'crypto-red': '#e63946',
-                        'telegram-blue': '#2AABEE',
-                    },
-                    animation: {
-                        blob: 'blob 7s infinite',
-                        'pulse-gold': 'pulse-gold 3s ease-in-out infinite',
-                    },
-                    keyframes: {
-                        blob: {
-                            '0%, 100%': { transform: 'translate(0px, 0px) scale(1)' },
-                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
-                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
-                        },
-                        'pulse-gold': {
-                            '0%, 100%': { 'box-shadow': '0 0 40px rgba(253, 224, 71, 0.4)', 'transform': 'scale(1)' },
-                            '50%': { 'box-shadow': '0 0 60px rgba(253, 224, 71, 0.6)', 'transform': 'scale(1.03)' },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- Stili Custom e Animazioni -->
+    <!-- Google Font: Space Grotesk -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        /* Importazione Font Moderno */
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
-
+        /* Configurazione di base Tailwind */
         body {
             font-family: 'Space Grotesk', sans-serif;
-            background: #000;
+            background-color: #030712; /* Sfondo molto scuro */
             color: #fff;
             min-height: 100vh;
             overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            margin: 0;
+            padding: 0;
         }
 
-        /* --- STILI NEVE --- */
+        /* ANIMAZIONI E EFFETTI VISIVI */
+
+        /* Animazione Gradiente di Sfondo (Blob) */
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob { animation: blob 7s infinite; }
+        .animation-delay-2000 { animation-delay: 2s; }
+
+        /* Animazione Pulsante centrale (Pulse Gold) */
+        .animate-pulse-gold {
+            animation: pulse-gold 3s ease-in-out infinite;
+        }
+        @keyframes pulse-gold {
+            0%, 100% {
+                box-shadow: 0 0 40px rgba(253, 224, 71, 0.4);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 60px rgba(253, 224, 71, 0.6);
+                transform: scale(1.03);
+            }
+        }
+
+        /* Stili per la Neve (Fiocchi gestiti da JavaScript) */
         .snowflakes-container {
             position: fixed;
             top: 0;
@@ -60,10 +58,17 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 1; 
+            z-index: 10; 
         }
-
-        /* --- STILI CONFETTI (FUOCHI D'ARTIFICIO) --- */
+        .snowflake {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            filter: blur(0.5px);
+            will-change: transform, opacity; /* Ottimizzazione performance */
+        }
+        
+        /* Stili per i Confetti (Fuochi d'Artificio gestiti da JavaScript) */
         .confetti-container {
             position: fixed;
             top: 0;
@@ -76,36 +81,31 @@
         .confetto {
             position: absolute;
             border-radius: 50%;
-            /* Rimuoviamo la transizione CSS per gestirla con requestAnimationFrame */
-        }
-
-        /* Utility per ritardare l'animazione blob */
-        .animation-delay-2000 {
-            animation-delay: 2s;
+            will-change: transform, opacity; /* Ottimizzazione performance */
         }
     </style>
 </head>
-<body class="bg-gray-950">
+<body>
     
-    <!-- Sfondo Gradiente Animato (Z-index 0) -->
+    <!-- SFONDO GRADIENTE (Z-0) -->
     <div class="absolute inset-0 z-0 opacity-10">
-        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-crypto-red rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-red-600 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
         <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
     </div>
 
-    <!-- Contenitore Neve (Z-index 1) -->
+    <!-- CONTENITORE NEVE (Z-10) -->
     <div id="snowflakes-container" class="snowflakes-container"></div>
 
-    <!-- Contenitore Confetti (Z-index 50) -->
+    <!-- CONTENITORE CONFETTI (Z-50) -->
     <div id="confetti-container" class="confetti-container"></div>
 
-    <!-- Contenuto Principale (Z-index 10) -->
-    <div class="relative z-10 max-w-5xl mx-auto px-6 py-8 flex flex-col min-h-screen">
+    <!-- CONTENUTO PRINCIPALE (Z-20) -->
+    <div class="relative z-20 max-w-5xl mx-auto px-6 py-8 flex flex-col min-h-screen">
         
         <!-- Header -->
         <header class="flex justify-between items-center py-4 mb-12">
             <div class="flex items-center space-x-3 text-2xl font-bold">
-                <img id="logo-header" src="https://placehold.co/40x40/ffd700/000?text=G" alt="$GIFT Logo" class="w-10 h-10 rounded-full border-2 border-yellow-500" onerror="this.onerror=null;this.src='https://placehold.co/40x40/ffd700/000?text=G';">
+                <img src="https://placehold.co/40x40/ffd700/000?text=G" alt="$GIFT Logo" class="w-10 h-10 rounded-full border-2 border-yellow-500" />
                 <span>$GIFT</span>
             </div>
             <a 
@@ -126,9 +126,9 @@
                 id="hero-logo"
                 src="https://placehold.co/128x128/ffd700/000?text=GIFT" 
                 alt="$GIFT Token" 
-                class="w-32 h-32 rounded-full mb-8 cursor-pointer shadow-2xl shadow-yellow-500/50 hover:scale-[1.03] transition-transform duration-300 animate-pulse-gold"
-                onerror="this.onerror=null;this.src='https://placehold.co/128x128/ffd700/000?text=GIFT';"
-            >
+                class="w-32 h-32 rounded-full mb-8 animate-pulse-gold cursor-pointer"
+                title="Clicca per i Fuochi d'Artificio!"
+            />
             
             <h1 class="text-6xl sm:text-7xl lg:text-8xl font-extrabold mb-4 leading-none tracking-tight">
                 The 
@@ -139,7 +139,7 @@
             </h1>
             
             <p class="text-lg sm:text-xl text-gray-400 max-w-xl mb-12">
-                Spread the holiday spirit. A community-driven memecoin on BNB Chain. **Zero taxes.** Pure vibes.
+                Spread the holiday spirit. A community-driven memecoin on BNB Chain. <strong>Zero taxes.</strong> Pure vibes.
             </p>
 
             <!-- Action Buttons -->
@@ -150,7 +150,7 @@
                     rel="noopener noreferrer"
                     class="flex items-center justify-center space-x-2 px-8 py-4 bg-gradient-to-r from-red-600 to-red-400 text-white font-bold rounded-full shadow-xl shadow-red-500/30 transition-all duration-300 transform hover:scale-[1.02] active:scale-95"
                 >
-                    <span data-lucide="shopping-cart" class="w-5 h-5"></span>
+                    <i data-lucide="shopping-cart" class="w-5 h-5"></i>
                     <span>Buy on PancakeSwap</span>
                 </a>
                 <a 
@@ -159,12 +159,12 @@
                     rel="noopener noreferrer"
                     class="flex items-center justify-center space-x-2 px-8 py-4 bg-gray-800 text-white font-bold rounded-full border border-gray-700 transition-all duration-300 transform hover:border-yellow-500 hover:bg-gray-700 active:scale-95"
                 >
-                    <span data-lucide="line-chart" class="w-5 h-5"></span>
+                    <i data-lucide="line-chart" class="w-5 h-5"></i>
                     <span>View Chart</span>
                 </a>
             </div>
 
-            <!-- Stats (Solo 3 elementi) -->
+            <!-- Stats -->
             <div class="flex flex-wrap justify-center gap-x-12 gap-y-6 w-full max-w-2xl py-8 border-y border-gray-800 mb-16">
                 <div class="flex flex-col items-center">
                     <div class="text-4xl font-extrabold text-yellow-400 mb-1">1B</div>
@@ -187,7 +187,7 @@
             >
                 <p class="text-xs text-gray-500 uppercase tracking-widest mb-3">Contract Address (BNB Chain)</p>
                 <div class="flex items-center justify-center space-x-4 h-12">
-                    <span id="contract-address-display" class="text-xl font-bold text-red-400">
+                    <span id="contract-status" class="text-xl font-bold text-red-400">
                         In Arrivo Presto
                     </span>
                     
@@ -197,10 +197,10 @@
                         class="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full transition-colors duration-300 bg-gray-700 border border-gray-600 text-gray-500 cursor-not-allowed"
                         title="Indirizzo non disponibile"
                     >
-                        <span data-lucide="copy" class="w-5 h-5"></span>
+                        <i data-lucide="copy" class="w-5 h-5"></i>
                     </button>
                 </div>
-                <p id="copy-status-message" class="mt-3 text-sm font-medium transition-opacity opacity-0 h-4"></p>
+                <p id="copy-feedback" class="mt-3 text-sm font-medium transition-opacity opacity-0 text-green-400"></p>
             </div>
         </main>
 
@@ -208,7 +208,7 @@
         <footer class="text-center pt-10 pb-4 border-t border-gray-900 mt-auto">
             <div class="flex justify-center space-x-6 mb-6">
                 
-                <!-- X (Twitter) Link -->
+                <!-- X (Twitter) Link - Icona X corretta -->
                 <a 
                     href="#" 
                     target="_blank" 
@@ -216,280 +216,243 @@
                     title="X"
                     class="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-lg bg-gray-900/50 border border-gray-800 text-white hover:border-white hover:shadow-2xl hover:shadow-white/50"
                 >
-                    <span data-lucide="x" class="w-6 h-6 text-white"></span>
+                    <i data-lucide="x" class="w-6 h-6 text-white"></i>
                 </a>
-
-                <!-- Telegram Link -->
+                
+                <!-- Telegram Link - Stile Neon Blu -->
                 <a 
                     href="#" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     title="Telegram"
-                    class="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-lg bg-telegram-blue/20 border border-telegram-blue text-telegram-blue hover:shadow-2xl hover:shadow-telegram-blue/50"
+                    class="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-lg bg-[#2AABEE]/20 border border-[#2AABEE] text-[#2AABEE] hover:shadow-2xl hover:shadow-[#2AABEE]/50"
                 >
-                    <span data-lucide="send" class="w-6 h-6 text-white"></span>
+                    <i data-lucide="send" class="w-6 h-6 text-white"></i>
                 </a>
-
-                <!-- DEX Tools Link -->
+                
+                <!-- DEX Tools Link - Stile Glow Giallo -->
                 <a 
-                    href="#" 
+                    href="https://dexscreener.com/bsc" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     title="DEX Tools"
                     class="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-lg bg-gray-800/50 border border-gray-700 text-yellow-400 hover:border-yellow-500 hover:shadow-2xl hover:shadow-yellow-500/50"
                 >
-                    <span data-lucide="zap" class="w-6 h-6 text-yellow-400"></span>
+                    <i data-lucide="zap" class="w-6 h-6 text-yellow-400"></i>
                 </a>
-
             </div>
             <p class="text-sm text-gray-600">
-                &copy; <span id="current-year"></span> $GIFT — The Gift of Crypto. All rights reserved.
+                &copy; 2024 $GIFT — The Gift of Crypto. All rights reserved.
             </p>
         </footer>
-
     </div>
 
+    <!-- LOGICA JAVASCRIPT NATIVA -->
     <script>
-        // Variabili Globali
-        const CONTRACT_ADDRESS = null; // Mantenuto null come da richiesta
-        const logoElement = document.getElementById('hero-logo');
-        const copyButton = document.getElementById('copy-button');
-        const addressDisplay = document.getElementById('contract-address-display');
-        const statusMessage = document.getElementById('copy-status-message');
-        const confettiContainer = document.getElementById('confetti-container');
-        const snowflakesContainer = document.getElementById('snowflakes-container');
-        let snowFlakes = [];
-        let confettiParticles = [];
-        let animationFrameIdSnow;
-        let animationFrameIdConfetti;
-
-        // 1. Inizializzazione e Stato Iniziale
-        document.getElementById('current-year').textContent = new Date().getFullYear();
-
-        if (CONTRACT_ADDRESS) {
-            addressDisplay.textContent = CONTRACT_ADDRESS;
-            addressDisplay.classList.remove('text-xl', 'font-bold', 'text-red-400');
-            addressDisplay.classList.add('font-mono', 'text-sm', 'sm:text-base', 'text-yellow-400', 'break-all', 'select-all');
-            copyButton.disabled = false;
-            copyButton.classList.replace('bg-gray-700', 'bg-yellow-600/10');
-            copyButton.classList.replace('text-gray-500', 'text-yellow-300');
-            copyButton.classList.replace('cursor-not-allowed', 'cursor-pointer');
-            copyButton.title = "Copia Indirizzo Contratto";
-        }
-
-        // 2. Funzione per la Copia
-        function copyAddress() {
-            if (!CONTRACT_ADDRESS) return;
-
-            try {
-                const textarea = document.createElement('textarea');
-                textarea.value = CONTRACT_ADDRESS;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-
-                // Feedback Successo
-                statusMessage.textContent = 'Indirizzo copiato!';
-                statusMessage.className = 'mt-3 text-sm font-medium text-green-400 opacity-100 transition-opacity duration-300';
-                setTimeout(() => {
-                    statusMessage.classList.remove('opacity-100');
-                    statusMessage.classList.add('opacity-0');
-                }, 3000);
-
-            } catch (err) {
-                // Feedback Errore
-                statusMessage.textContent = 'Copia fallita.';
-                statusMessage.className = 'mt-3 text-sm font-medium text-red-400 opacity-100 transition-opacity duration-300';
-                setTimeout(() => {
-                    statusMessage.classList.remove('opacity-100');
-                    statusMessage.classList.add('opacity-0');
-                }, 3000);
-            }
-        }
-
-        // 3. Logica Neve (più realistica - Ottimizzata per il DOM)
-        function generateSnowflake() {
-            const flake = {
-                id: Math.random(),
-                x: Math.random() * window.innerWidth,
-                y: -10,
-                size: Math.random() * 5 + 2,
-                speed: Math.random() * 2 + 1,
-                opacity: Math.random() * 0.7 + 0.3,
-                wind: (Math.random() - 0.5) * 0.5,
-                rotationSpeed: (Math.random() - 0.5) * 0.1,
-                currentRotation: Math.random() * 360,
-                domElement: document.createElement('div')
-            };
-
-            flake.domElement.className = 'snowflake';
-            flake.domElement.style.cssText = `
-                width: ${flake.size}px;
-                height: ${flake.size}px;
-                opacity: ${flake.opacity};
-                background: white;
-                border-radius: 50%;
-                position: absolute;
-                filter: blur(0.5px);
-                pointer-events: none;
-                transition: none; /* Disabilita transizioni CSS per requestAnimationFrame */
-            `;
-            snowflakesContainer.appendChild(flake.domElement);
-            return flake;
-        }
-
-        function animateSnow(currentTime) {
-            let lastTime = 0;
-            if (!lastTime) lastTime = currentTime;
-            const deltaTime = (currentTime - lastTime) / 16; 
-
-            // Aggiorna la posizione e l'elemento DOM
-            snowFlakes = snowFlakes.map(flake => {
-                let newY = flake.y + flake.speed * deltaTime;
-                let newX = flake.x + flake.wind * deltaTime;
-                let newRotation = (flake.currentRotation + flake.rotationSpeed * deltaTime) % 360;
-
-                let isDead = false;
-                if (newY > window.innerHeight + flake.size) {
-                    // Rinasce in alto con nuova posizione X
-                    newY = -flake.size;
-                    newX = Math.random() * window.innerWidth;
-                }
-                
-                // Aggiornamento DOM (più efficiente)
-                flake.domElement.style.transform = `translate(${newX}px, ${newY}px) rotate(${newRotation}deg)`;
-                
-                return { ...flake, y: newY, x: newX, currentRotation: newRotation };
-            });
-
-            // Aggiungi nuovi fiocchi occasionalmente
-            if (Math.random() < 0.05 * deltaTime) {
-                snowFlakes.push(generateSnowflake());
-            }
-            
-            // Rimozione fiocchi morti (in questo caso, rinascono, quindi non ne rimuoviamo nessuno)
-            // Se volessimo rimuovere e rigenerare completamente:
-            // snowFlakes = snowFlakes.filter(flake => flake.y <= window.innerHeight + flake.size);
-
-            lastTime = currentTime;
-            animationFrameIdSnow = requestAnimationFrame(animateSnow);
-        }
-
-        // 4. Logica Confetti (Fuochi d'Artificio - Ottimizzata per il DOM)
-        function triggerConfetti(e) {
-            e.preventDefault();
-            const rect = logoElement.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-
-            const colors = ['#fde047', '#ef4444', '#3b82f6', '#10b981', '#a78bfa', '#ec4899'];
-            const now = Date.now();
-            
-            for (let i = 0; i < 30; i++) {
-                const domElement = document.createElement('div');
-                const size = Math.random() * 8 + 4;
-                const particle = {
-                    id: now + i,
-                    x: centerX,
-                    y: centerY,
-                    color: colors[Math.floor(Math.random() * colors.length)],
-                    dx: (Math.random() - 0.5) * (Math.random() * 10 + 5),
-                    dy: (Math.random() - 0.5) * (Math.random() * 10 + 5),
-                    rotation: Math.random() * 360,
-                    size: size,
-                    startTime: now,
-                    domElement: domElement // Elemento DOM memorizzato
-                };
-
-                domElement.className = 'confetto';
-                domElement.style.cssText = `
-                    background-color: ${particle.color};
-                    width: ${particle.size}px;
-                    height: ${particle.size}px;
-                    left: ${particle.x}px;
-                    top: ${particle.y}px;
-                `;
-                confettiContainer.appendChild(domElement);
-                confettiParticles.push(particle);
-            }
-
-            // Avvia/continua il loop di animazione se non è già attivo
-            if (!animationFrameIdConfetti) {
-                 animateConfetti();
-            }
-        }
-
-        function animateConfetti(currentTime) {
-            const now = Date.now();
-            const duration = 1800; // 1.8 secondi
-            
-            // Pulisce le particelle morte e rimuove i loro elementi DOM
-            confettiParticles = confettiParticles.filter(c => {
-                const elapsed = now - c.startTime;
-                if (elapsed >= duration) {
-                    if (c.domElement) confettiContainer.removeChild(c.domElement);
-                    return false;
-                }
-                return true;
-            });
-            
-            // Aggiorna la posizione e l'aspetto delle particelle vive
-            confettiParticles.forEach(c => {
-                const elapsed = now - c.startTime;
-                const progress = elapsed / duration;
-                
-                const scale = 1 - progress * 0.5;
-                const opacity = 1 - progress;
-                
-                // Aggiornamento DOM tramite transform (più veloce di left/top)
-                c.domElement.style.transform = `
-                    translate(-50%, -50%) 
-                    translate(${c.dx * progress * 5}px, ${c.dy * progress * 5}px) 
-                    scale(${scale}) 
-                    rotate(${c.rotation + progress * 360}deg)
-                `;
-                c.domElement.style.opacity = opacity;
-            });
-
-            if (confettiParticles.length > 0) {
-                animationFrameIdConfetti = requestAnimationFrame(animateConfetti);
-            } else {
-                animationFrameIdConfetti = null;
-            }
-        }
-
-
-        // 5. Gestione Eventi e Inizializzazione
-        logoElement.addEventListener('click', triggerConfetti);
-        logoElement.addEventListener('touchstart', triggerConfetti); // Supporto touch
-        copyButton.addEventListener('click', copyAddress);
-
-        // Funzione per l'hover della card del contratto (sottile effetto moderno)
-        const contractCard = document.getElementById('contract-card');
-        if (contractCard) {
-            // Animazione solo per l'ombra (Tailwind gestisce il resto)
-            contractCard.addEventListener('mouseenter', () => contractCard.classList.add('shadow-2xl', 'shadow-yellow-500/20'));
-            contractCard.addEventListener('mouseleave', () => contractCard.classList.remove('shadow-2xl', 'shadow-yellow-500/20'));
-        }
-
-        // Avvia l'animazione della neve
-        window.onload = function() {
-             // Inizializza gli elementi DOM dei fiocchi di neve
-             for (let i = 0; i < 50; i++) {
-                snowFlakes.push(generateSnowflake());
-            }
-
-            // Avvia i loop di animazione
-            animateSnow(0);
-            
-            // Re-render Lucide icons after load (important for HTML/JS)
-            if (typeof lucide !== 'undefined') {
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inizializza Lucide Icons dopo che il DOM è pronto
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
                 lucide.createIcons();
             }
+
+            // --- CONFIGURAZIONE E VARIABILI GLOBALI ---
+            const CONTRACT_ADDRESS = null; // Indirizzo del contratto
+            const snowContainer = document.getElementById('snowflakes-container');
+            const confettiContainer = document.getElementById('confetti-container');
+            const heroLogo = document.getElementById('hero-logo');
             
-            // L'animazione Pulse Logo è ora in CSS/Tailwind: logoElement.classList.add('animate-pulse-gold');
-        };
+            let snowFlakes = [];
+            const NUM_INITIAL_SNOWFLAKES = 50;
+
+            // --- LOGICA COPY TO CLIPBOARD ---
+
+            const copyToClipboard = (text) => {
+                try {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    return true;
+                } catch (err) {
+                    return false;
+                }
+            };
+
+            const handleCopy = () => {
+                if (!CONTRACT_ADDRESS) return;
+
+                const success = copyToClipboard(CONTRACT_ADDRESS);
+                const feedback = document.getElementById('copy-feedback');
+
+                feedback.textContent = success ? 'Indirizzo copiato!' : 'Copia fallita.';
+                feedback.className = `mt-3 text-sm font-medium transition-opacity ${success ? 'text-green-400' : 'text-red-400'} opacity-100`;
+
+                setTimeout(() => {
+                    feedback.className = feedback.className.replace('opacity-100', 'opacity-0');
+                }, 3000);
+            };
+
+            // --- LOGICA NEVE REALISTICA (requestAnimationFrame) ---
+
+            const generateSnowflake = () => {
+                const flake = document.createElement('div');
+                flake.className = 'snowflake';
+                // Genera proprietà casuali per il realismo
+                const size = Math.random() * 5 + 2; // 2px a 7px
+                const speed = Math.random() * 2 + 1; // 1px/s a 3px/s
+                const opacity = Math.random() * 0.7 + 0.3; // 30% a 100%
+                const wind = (Math.random() - 0.5) * 0.5; // Leggero vento orizzontale
+                const rotationSpeed = (Math.random() - 0.5) * 0.1; // Rotazione
+                
+                // Imposta le proprietà DOM/CSS
+                flake.style.width = `${size}px`;
+                flake.style.height = `${size}px`;
+                flake.style.opacity = opacity;
+                
+                // Dati interni del fiocco
+                const data = {
+                    element: flake,
+                    x: Math.random() * window.innerWidth,
+                    y: -10, // Inizia sopra lo schermo
+                    size: size,
+                    speed: speed,
+                    wind: wind,
+                    rotationSpeed: rotationSpeed,
+                    currentRotation: 0,
+                    opacity: opacity
+                };
+                
+                snowFlakes.push(data);
+                snowContainer.appendChild(flake);
+                return data;
+            };
+
+            // Creazione iniziale dei fiocchi
+            for (let i = 0; i < NUM_INITIAL_SNOWFLAKES; i++) {
+                generateSnowflake();
+            }
+
+            let lastTimeSnow = 0;
+            const animateSnow = (currentTime) => {
+                if (!lastTimeSnow) lastTimeSnow = currentTime;
+                const deltaTime = (currentTime - lastTimeSnow) / 16; // circa 60fps
+
+                for (let i = snowFlakes.length - 1; i >= 0; i--) {
+                    const flake = snowFlakes[i];
+                    
+                    flake.y += flake.speed * deltaTime;
+                    flake.x += flake.wind * deltaTime;
+                    flake.currentRotation = (flake.currentRotation + flake.rotationSpeed * deltaTime) % 360;
+
+                    // Riposiziona il fiocco se esce dallo schermo
+                    if (flake.y > window.innerHeight + flake.size) {
+                        flake.y = -flake.size;
+                        flake.x = Math.random() * window.innerWidth;
+                        // Resetta le proprietà dinamiche (vento/velocità) per realismo
+                        flake.speed = Math.random() * 2 + 1;
+                        flake.wind = (Math.random() - 0.5) * 0.5;
+                        flake.rotationSpeed = (Math.random() - 0.5) * 0.1;
+                    }
+
+                    // Aggiorna la posizione e la rotazione (uso transform per performance)
+                    flake.element.style.transform = `translate(${flake.x}px, ${flake.y}px) rotate(${flake.currentRotation}deg)`;
+                }
+                
+                // Aggiungi nuovi fiocchi occasionalmente
+                if (Math.random() < 0.05 * deltaTime) { 
+                    generateSnowflake();
+                }
+
+                lastTimeSnow = currentTime;
+                requestAnimationFrame(animateSnow);
+            };
+
+            // Avvia l'animazione della neve
+            requestAnimationFrame(animateSnow);
+
+
+            // --- LOGICA CONFETTI (FUOCHI D'ARTIFICIO) ---
+
+            let confettiParticles = [];
+            const CONFETTI_LIFETIME = 1800; // 1.8 secondi
+
+            const triggerConfetti = (x, y) => {
+                const colors = ['#fde047', '#ef4444', '#3b82f6', '#10b981', '#a78bfa', '#ec4899'];
+                
+                for (let i = 0; i < 30; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'confetto';
+                    
+                    const size = Math.random() * 8 + 4; 
+                    const dx = (Math.random() - 0.5) * (Math.random() * 10 + 5); 
+                    const dy = (Math.random() - 0.5) * (Math.random() * 10 + 5);
+                    const rotation = Math.random() * 360;
+                    
+                    particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    particle.style.left = `${x}px`;
+                    particle.style.top = `${y}px`;
+                    particle.style.opacity = 1;
+                    
+                    // Imposta la transizione CSS per l'effetto di dissolvenza/caduta
+                    particle.style.transition = `transform ${CONFETTI_LIFETIME / 1000}s ease-out, opacity ${CONFETTI_LIFETIME / 1000}s ease-out`;
+
+                    // Applica la trasformazione per lo scoppio iniziale
+                    particle.style.transform = `translate(-50%, -50%) translate(${dx}px, ${dy}px) rotate(${rotation}deg) scale(1)`;
+
+                    confettiContainer.appendChild(particle);
+
+                    // Dopo un piccolo timeout (per permettere all'animazione di iniziare)
+                    setTimeout(() => {
+                        // Aggiorna la trasformazione finale (caduta + dissolvenza)
+                        particle.style.transform = `translate(-50%, -50%) translate(${dx * 2}px, ${dy * 2 + 100}px) rotate(${rotation + 180}deg) scale(0.1)`;
+                        particle.style.opacity = 0;
+                    }, 10);
+                    
+                    // Rimuove il confetto dal DOM dopo l'animazione
+                    setTimeout(() => {
+                        confettiContainer.removeChild(particle);
+                    }, CONFETTI_LIFETIME);
+                }
+            };
+
+            // Collega l'evento click/touch al logo
+            heroLogo.addEventListener('click', (e) => {
+                // Calcola la posizione del click rispetto al viewport
+                const rect = heroLogo.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                triggerConfetti(centerX, centerY);
+                e.preventDefault();
+            });
+
+            // --- CONFIGURAZIONE FINALE UI ---
+
+            const contractStatus = document.getElementById('contract-status');
+            const copyButton = document.getElementById('copy-button');
+            
+            if (CONTRACT_ADDRESS) {
+                // Se l'indirizzo è presente, aggiorna la UI
+                contractStatus.textContent = CONTRACT_ADDRESS;
+                contractStatus.className = 'font-mono text-yellow-400 text-sm sm:text-base break-all select-all';
+                
+                // Abilita il pulsante di copia
+                copyButton.disabled = false;
+                copyButton.classList.remove('bg-gray-700', 'border-gray-600', 'text-gray-500', 'cursor-not-allowed');
+                copyButton.classList.add('bg-yellow-600/10', 'border-yellow-800', 'hover:bg-yellow-600/20', 'text-yellow-300');
+                copyButton.title = "Copia Indirizzo Contratto";
+                copyButton.addEventListener('click', handleCopy);
+            }
+            // Altrimenti, mantiene lo stato "In Arrivo Presto" e il pulsante disabilitato.
+
+            // Animazione hover per la card del contratto (solo estetico)
+            const contractCard = document.getElementById('contract-card');
+            contractCard.addEventListener('mouseenter', () => contractCard.classList.add('shadow-2xl', 'shadow-yellow-500/20'));
+            contractCard.addEventListener('mouseleave', () => contractCard.classList.remove('shadow-2xl', 'shadow-yellow-500/20'));
+        });
     </script>
 </body>
 </html>
