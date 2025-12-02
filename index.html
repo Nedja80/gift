@@ -1,430 +1,495 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { ShoppingCart, LineChart, Copy, Zap, Send, X } from 'lucide-react';
-
-// Funzione per la gestione asincrona del copy to clipboard
-const copyToClipboard = async (text) => {
-    try {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        return true;
-    } catch (err) {
-        console.error('Could not copy text: ', err);
-        return false;
-    }
-};
-
-// Componente principale dell'App
-const App = () => {
-    const contractAddress = null; // Impostato a null
-    const logoUrl = "https://placehold.co/120x120/ffd700/000?text=GIFT";
-    
-    const [copyStatus, setCopyStatus] = useState(null);
-    const [confetti, setConfetti] = useState([]);
-    const [isContractHovered, setIsContractHovered] = useState(false);
-
-    const isAddressAvailable = !!contractAddress;
-
-    const handleCopy = useCallback(async () => {
-        if (!contractAddress) {
-            console.log("Contract address not yet available.");
-            return;
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>$GIFT - The Gift of Crypto</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN (per le icone X, Send, Copy, ecc.) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Configurazione Tailwind per stili personalizzati -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'crypto-yellow': '#ffd700',
+                        'crypto-red': '#e63946',
+                        'telegram-blue': '#2AABEE',
+                    },
+                    animation: {
+                        blob: 'blob 7s infinite',
+                        'pulse-gold': 'pulse-gold 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%, 100%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                        },
+                        'pulse-gold': {
+                            '0%, 100%': { 'box-shadow': '0 0 40px rgba(253, 224, 71, 0.4)', 'transform': 'scale(1)' },
+                            '50%': { 'box-shadow': '0 0 60px rgba(253, 224, 71, 0.6)', 'transform': 'scale(1.03)' },
+                        }
+                    }
+                }
+            }
         }
-        const success = await copyToClipboard(contractAddress);
-        setCopyStatus(success ? 'success' : 'error');
-        setTimeout(() => setCopyStatus(null), 3000);
-    }, [contractAddress]);
+    </script>
+    <!-- Stili Custom e Animazioni -->
+    <style>
+        /* Importazione Font Moderno */
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
-    const copyButtonClass = contractAddress
-        ? (copyStatus === 'success' 
-            ? 'bg-green-600 hover:bg-green-700 text-white' 
-            : 'bg-yellow-600/10 border border-yellow-800 hover:bg-yellow-600/20 text-yellow-300')
-        : 'bg-gray-700 border border-gray-600 text-gray-500 cursor-not-allowed';
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* --- STILI NEVE --- */
+        .snowflakes-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1; 
+        }
+
+        /* --- STILI CONFETTI (FUOCHI D'ARTIFICIO) --- */
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 50; 
+        }
+        .confetto {
+            position: absolute;
+            border-radius: 50%;
+            /* Rimuoviamo la transizione CSS per gestirla con requestAnimationFrame */
+        }
+
+        /* Utility per ritardare l'animazione blob */
+        .animation-delay-2000 {
+            animation-delay: 2s;
+        }
+    </style>
+</head>
+<body class="bg-gray-950">
     
-    // Logica per l'effetto Confetti (Fuochi d'Artificio)
-    const triggerConfetti = useCallback((x, y) => {
-        const newConfetti = [];
-        const colors = ['#fde047', '#ef4444', '#3b82f6', '#10b981', '#a78bfa', '#ec4899']; // Colori più vari
+    <!-- Sfondo Gradiente Animato (Z-index 0) -->
+    <div class="absolute inset-0 z-0 opacity-10">
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-crypto-red rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+    </div>
+
+    <!-- Contenitore Neve (Z-index 1) -->
+    <div id="snowflakes-container" class="snowflakes-container"></div>
+
+    <!-- Contenitore Confetti (Z-index 50) -->
+    <div id="confetti-container" class="confetti-container"></div>
+
+    <!-- Contenuto Principale (Z-index 10) -->
+    <div class="relative z-10 max-w-5xl mx-auto px-6 py-8 flex flex-col min-h-screen">
         
-        for (let i = 0; i < 30; i++) { // Più confetti
-            newConfetti.push({
-                id: Date.now() + i,
-                x: x,
-                y: y,
-                color: colors[Math.floor(Math.random() * colors.length)],
-                dx: (Math.random() - 0.5) * (Math.random() * 10 + 5), // Velocità più ampia e casuale
-                dy: (Math.random() - 0.5) * (Math.random() * 10 + 5), 
-                rotation: Math.random() * 360,
-                size: Math.random() * 8 + 4, // Dimensioni più piccole e casuali
-                initialOpacity: 1,
-                initialScale: 1,
-            });
+        <!-- Header -->
+        <header class="flex justify-between items-center py-4 mb-12">
+            <div class="flex items-center space-x-3 text-2xl font-bold">
+                <img id="logo-header" src="https://placehold.co/40x40/ffd700/000?text=G" alt="$GIFT Logo" class="w-10 h-10 rounded-full border-2 border-yellow-500" onerror="this.onerror=null;this.src='https://placehold.co/40x40/ffd700/000?text=G';">
+                <span>$GIFT</span>
+            </div>
+            <a 
+                href="https://pancakeswap.finance/swap" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                class="px-6 py-2 bg-white text-gray-900 font-semibold rounded-full shadow-lg hover:bg-gray-200 transition-all duration-300 transform hover:scale-105"
+            >
+                Buy Now
+            </a>
+        </header>
+
+        <!-- Main Content (Hero) -->
+        <main class="flex-grow flex flex-col items-center justify-center text-center py-10">
+            
+            <!-- LOGO E CLICK CONFETTI -->
+            <img 
+                id="hero-logo"
+                src="https://placehold.co/128x128/ffd700/000?text=GIFT" 
+                alt="$GIFT Token" 
+                class="w-32 h-32 rounded-full mb-8 cursor-pointer shadow-2xl shadow-yellow-500/50 hover:scale-[1.03] transition-transform duration-300 animate-pulse-gold"
+                onerror="this.onerror=null;this.src='https://placehold.co/128x128/ffd700/000?text=GIFT';"
+            >
+            
+            <h1 class="text-6xl sm:text-7xl lg:text-8xl font-extrabold mb-4 leading-none tracking-tight">
+                The 
+                <span class="ml-3 bg-clip-text text-transparent bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500">
+                    Gift
+                </span>
+                <br class="sm:hidden"/> of Crypto
+            </h1>
+            
+            <p class="text-lg sm:text-xl text-gray-400 max-w-xl mb-12">
+                Spread the holiday spirit. A community-driven memecoin on BNB Chain. **Zero taxes.** Pure vibes.
+            </p>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 mb-16 w-full max-w-sm sm:max-w-none">
+                <a 
+                    href="https://pancakeswap.finance/swap" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    class="flex items-center justify-center space-x-2 px-8 py-4 bg-gradient-to-r from-red-600 to-red-400 text-white font-bold rounded-full shadow-xl shadow-red-500/30 transition-all duration-300 transform hover:scale-[1.02] active:scale-95"
+                >
+                    <span data-lucide="shopping-cart" class="w-5 h-5"></span>
+                    <span>Buy on PancakeSwap</span>
+                </a>
+                <a 
+                    href="https://dexscreener.com/bsc" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    class="flex items-center justify-center space-x-2 px-8 py-4 bg-gray-800 text-white font-bold rounded-full border border-gray-700 transition-all duration-300 transform hover:border-yellow-500 hover:bg-gray-700 active:scale-95"
+                >
+                    <span data-lucide="line-chart" class="w-5 h-5"></span>
+                    <span>View Chart</span>
+                </a>
+            </div>
+
+            <!-- Stats (Solo 3 elementi) -->
+            <div class="flex flex-wrap justify-center gap-x-12 gap-y-6 w-full max-w-2xl py-8 border-y border-gray-800 mb-16">
+                <div class="flex flex-col items-center">
+                    <div class="text-4xl font-extrabold text-yellow-400 mb-1">1B</div>
+                    <div class="text-xs uppercase tracking-wider text-gray-500">Total Supply</div>
+                </div>
+                <div class="flex flex-col items-center">
+                    <div class="text-4xl font-extrabold text-yellow-400 mb-1">0%</div>
+                    <div class="text-xs uppercase tracking-wider text-gray-500">Tax (Buy/Sell)</div>
+                </div>
+                <div class="flex flex-col items-center">
+                    <div class="text-4xl font-extrabold text-yellow-400 mb-1">100%</div>
+                    <div class="text-xs uppercase tracking-wider text-gray-500">LP Locked</div>
+                </div>
+            </div>
+
+            <!-- Contract Address Card -->
+            <div 
+                id="contract-card"
+                class="w-full max-w-lg p-6 rounded-xl transition-all duration-300 shadow-xl shadow-black/50 bg-gray-800/50 backdrop-blur-sm border border-gray-800"
+            >
+                <p class="text-xs text-gray-500 uppercase tracking-widest mb-3">Contract Address (BNB Chain)</p>
+                <div class="flex items-center justify-center space-x-4 h-12">
+                    <span id="contract-address-display" class="text-xl font-bold text-red-400">
+                        In Arrivo Presto
+                    </span>
+                    
+                    <button 
+                        id="copy-button"
+                        disabled
+                        class="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full transition-colors duration-300 bg-gray-700 border border-gray-600 text-gray-500 cursor-not-allowed"
+                        title="Indirizzo non disponibile"
+                    >
+                        <span data-lucide="copy" class="w-5 h-5"></span>
+                    </button>
+                </div>
+                <p id="copy-status-message" class="mt-3 text-sm font-medium transition-opacity opacity-0 h-4"></p>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center pt-10 pb-4 border-t border-gray-900 mt-auto">
+            <div class="flex justify-center space-x-6 mb-6">
+                
+                <!-- X (Twitter) Link -->
+                <a 
+                    href="#" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    title="X"
+                    class="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-lg bg-gray-900/50 border border-gray-800 text-white hover:border-white hover:shadow-2xl hover:shadow-white/50"
+                >
+                    <span data-lucide="x" class="w-6 h-6 text-white"></span>
+                </a>
+
+                <!-- Telegram Link -->
+                <a 
+                    href="#" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    title="Telegram"
+                    class="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-lg bg-telegram-blue/20 border border-telegram-blue text-telegram-blue hover:shadow-2xl hover:shadow-telegram-blue/50"
+                >
+                    <span data-lucide="send" class="w-6 h-6 text-white"></span>
+                </a>
+
+                <!-- DEX Tools Link -->
+                <a 
+                    href="#" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    title="DEX Tools"
+                    class="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-lg bg-gray-800/50 border border-gray-700 text-yellow-400 hover:border-yellow-500 hover:shadow-2xl hover:shadow-yellow-500/50"
+                >
+                    <span data-lucide="zap" class="w-6 h-6 text-yellow-400"></span>
+                </a>
+
+            </div>
+            <p class="text-sm text-gray-600">
+                &copy; <span id="current-year"></span> $GIFT — The Gift of Crypto. All rights reserved.
+            </p>
+        </footer>
+
+    </div>
+
+    <script>
+        // Variabili Globali
+        const CONTRACT_ADDRESS = null; // Mantenuto null come da richiesta
+        const logoElement = document.getElementById('hero-logo');
+        const copyButton = document.getElementById('copy-button');
+        const addressDisplay = document.getElementById('contract-address-display');
+        const statusMessage = document.getElementById('copy-status-message');
+        const confettiContainer = document.getElementById('confetti-container');
+        const snowflakesContainer = document.getElementById('snowflakes-container');
+        let snowFlakes = [];
+        let confettiParticles = [];
+        let animationFrameIdSnow;
+        let animationFrameIdConfetti;
+
+        // 1. Inizializzazione e Stato Iniziale
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+
+        if (CONTRACT_ADDRESS) {
+            addressDisplay.textContent = CONTRACT_ADDRESS;
+            addressDisplay.classList.remove('text-xl', 'font-bold', 'text-red-400');
+            addressDisplay.classList.add('font-mono', 'text-sm', 'sm:text-base', 'text-yellow-400', 'break-all', 'select-all');
+            copyButton.disabled = false;
+            copyButton.classList.replace('bg-gray-700', 'bg-yellow-600/10');
+            copyButton.classList.replace('text-gray-500', 'text-yellow-300');
+            copyButton.classList.replace('cursor-not-allowed', 'cursor-pointer');
+            copyButton.title = "Copia Indirizzo Contratto";
         }
-        setConfetti(prev => [...prev, ...newConfetti]);
 
-        // Rimuove i confetti dopo 1.8 secondi
-        setTimeout(() => {
-            setConfetti(prev => prev.filter(c => c.id > Date.now() - 1800));
-        }, 1800);
-    }, []);
+        // 2. Funzione per la Copia
+        function copyAddress() {
+            if (!CONTRACT_ADDRESS) return;
 
-    const handleLogoClick = useCallback((e) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        triggerConfetti(centerX, centerY);
-        e.preventDefault();
-    }, [triggerConfetti]);
+            try {
+                const textarea = document.createElement('textarea');
+                textarea.value = CONTRACT_ADDRESS;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
 
-    // Stato per i fiocchi di neve (posizione e animazione)
-    const [snowflakes, setSnowflakes] = useState([]);
+                // Feedback Successo
+                statusMessage.textContent = 'Indirizzo copiato!';
+                statusMessage.className = 'mt-3 text-sm font-medium text-green-400 opacity-100 transition-opacity duration-300';
+                setTimeout(() => {
+                    statusMessage.classList.remove('opacity-100');
+                    statusMessage.classList.add('opacity-0');
+                }, 3000);
 
-    useEffect(() => {
-        const generateSnowflake = () => {
-            return {
+            } catch (err) {
+                // Feedback Errore
+                statusMessage.textContent = 'Copia fallita.';
+                statusMessage.className = 'mt-3 text-sm font-medium text-red-400 opacity-100 transition-opacity duration-300';
+                setTimeout(() => {
+                    statusMessage.classList.remove('opacity-100');
+                    statusMessage.classList.add('opacity-0');
+                }, 3000);
+            }
+        }
+
+        // 3. Logica Neve (più realistica - Ottimizzata per il DOM)
+        function generateSnowflake() {
+            const flake = {
                 id: Math.random(),
                 x: Math.random() * window.innerWidth,
-                y: -10, // Inizia sopra lo schermo
-                size: Math.random() * 5 + 2, // 2px a 7px
-                speed: Math.random() * 2 + 1, // 1px/s a 3px/s
-                opacity: Math.random() * 0.7 + 0.3, // 30% a 100%
-                wind: (Math.random() - 0.5) * 0.5, // Leggero vento orizzontale
-                rotationSpeed: (Math.random() - 0.5) * 0.1, // Lenta rotazione
-                currentRotation: 0,
+                y: -10,
+                size: Math.random() * 5 + 2,
+                speed: Math.random() * 2 + 1,
+                opacity: Math.random() * 0.7 + 0.3,
+                wind: (Math.random() - 0.5) * 0.5,
+                rotationSpeed: (Math.random() - 0.5) * 0.1,
+                currentRotation: Math.random() * 360,
+                domElement: document.createElement('div')
             };
-        };
 
-        const createSnowflakes = () => {
-            const newSnowflakes = [];
-            for (let i = 0; i < 50; i++) { // Numero iniziale di fiocchi
-                newSnowflakes.push(generateSnowflake());
-            }
-            setSnowflakes(newSnowflakes);
-        };
+            flake.domElement.className = 'snowflake';
+            flake.domElement.style.cssText = `
+                width: ${flake.size}px;
+                height: ${flake.size}px;
+                opacity: ${flake.opacity};
+                background: white;
+                border-radius: 50%;
+                position: absolute;
+                filter: blur(0.5px);
+                pointer-events: none;
+                transition: none; /* Disabilita transizioni CSS per requestAnimationFrame */
+            `;
+            snowflakesContainer.appendChild(flake.domElement);
+            return flake;
+        }
 
-        createSnowflakes(); // Genera fiocchi iniziali
-
-        let animationFrameId;
-        let lastTime = 0;
-
-        const animateSnow = (currentTime) => {
+        function animateSnow(currentTime) {
+            let lastTime = 0;
             if (!lastTime) lastTime = currentTime;
-            const deltaTime = (currentTime - lastTime) / 16; // circa 60fps
+            const deltaTime = (currentTime - lastTime) / 16; 
 
-            setSnowflakes(prevSnowflakes => 
-                prevSnowflakes.map(flake => {
-                    let newY = flake.y + flake.speed * deltaTime;
-                    let newX = flake.x + flake.wind * deltaTime;
-                    let newRotation = (flake.currentRotation + flake.rotationSpeed * deltaTime) % 360;
+            // Aggiorna la posizione e l'elemento DOM
+            snowFlakes = snowFlakes.map(flake => {
+                let newY = flake.y + flake.speed * deltaTime;
+                let newX = flake.x + flake.wind * deltaTime;
+                let newRotation = (flake.currentRotation + flake.rotationSpeed * deltaTime) % 360;
 
-                    // Se il fiocco è sceso oltre lo schermo, lo riposiziona in alto
-                    if (newY > window.innerHeight + flake.size) {
-                        newY = -flake.size;
-                        newX = Math.random() * window.innerWidth; // Nuova posizione X casuale
-                    }
-
-                    return { ...flake, y: newY, x: newX, currentRotation: newRotation };
-                }).filter(flake => flake.y <= window.innerHeight + flake.size) // Rimuove quelli troppo vecchi se non riposizionati
-            );
+                let isDead = false;
+                if (newY > window.innerHeight + flake.size) {
+                    // Rinasce in alto con nuova posizione X
+                    newY = -flake.size;
+                    newX = Math.random() * window.innerWidth;
+                }
+                
+                // Aggiornamento DOM (più efficiente)
+                flake.domElement.style.transform = `translate(${newX}px, ${newY}px) rotate(${newRotation}deg)`;
+                
+                return { ...flake, y: newY, x: newX, currentRotation: newRotation };
+            });
 
             // Aggiungi nuovi fiocchi occasionalmente
-            if (Math.random() < 0.05 * deltaTime) { // Frequenza di aggiunta dei fiocchi
-                setSnowflakes(prev => [...prev, generateSnowflake()]);
+            if (Math.random() < 0.05 * deltaTime) {
+                snowFlakes.push(generateSnowflake());
             }
             
+            // Rimozione fiocchi morti (in questo caso, rinascono, quindi non ne rimuoviamo nessuno)
+            // Se volessimo rimuovere e rigenerare completamente:
+            // snowFlakes = snowFlakes.filter(flake => flake.y <= window.innerHeight + flake.size);
+
             lastTime = currentTime;
-            animationFrameId = requestAnimationFrame(animateSnow);
-        };
+            animationFrameIdSnow = requestAnimationFrame(animateSnow);
+        }
 
-        animationFrameId = requestAnimationFrame(animateSnow);
+        // 4. Logica Confetti (Fuochi d'Artificio - Ottimizzata per il DOM)
+        function triggerConfetti(e) {
+            e.preventDefault();
+            const rect = logoElement.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
 
-        return () => cancelAnimationFrame(animationFrameId);
-    }, []); // Dipendenza vuota: esegue una sola volta al mount
-
-    return (
-        <div className="min-h-screen bg-gray-950 text-white font-sans overflow-hidden relative">
+            const colors = ['#fde047', '#ef4444', '#3b82f6', '#10b981', '#a78bfa', '#ec4899'];
+            const now = Date.now();
             
-            {/* Sfondo Gradiente in Tailwind style (più discreto e moderno) */}
-            <div className="absolute inset-0 z-0 opacity-10">
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-600 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
-            </div>
+            for (let i = 0; i < 30; i++) {
+                const domElement = document.createElement('div');
+                const size = Math.random() * 8 + 4;
+                const particle = {
+                    id: now + i,
+                    x: centerX,
+                    y: centerY,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    dx: (Math.random() - 0.5) * (Math.random() * 10 + 5),
+                    dy: (Math.random() - 0.5) * (Math.random() * 10 + 5),
+                    rotation: Math.random() * 360,
+                    size: size,
+                    startTime: now,
+                    domElement: domElement // Elemento DOM memorizzato
+                };
 
-            {/* Effetto Neve Natalizio REALE */}
-            <div className="snowflakes-container">
-                {snowflakes.map(flake => (
-                    <div
-                        key={flake.id}
-                        className="snowflake"
-                        style={{
-                            left: flake.x,
-                            top: flake.y,
-                            width: flake.size,
-                            height: flake.size,
-                            opacity: flake.opacity,
-                            transform: `rotate(${flake.currentRotation}deg)`,
-                            background: 'white',
-                            borderRadius: '50%',
-                            position: 'absolute',
-                            filter: 'blur(0.5px)', // Leggera sfocatura per realismo
-                            pointerEvents: 'none',
-                        }}
-                    />
-                ))}
-            </div>
+                domElement.className = 'confetto';
+                domElement.style.cssText = `
+                    background-color: ${particle.color};
+                    width: ${particle.size}px;
+                    height: ${particle.size}px;
+                    left: ${particle.x}px;
+                    top: ${particle.y}px;
+                `;
+                confettiContainer.appendChild(domElement);
+                confettiParticles.push(particle);
+            }
 
-            {/* Contenitore per i Confetti (Fuochi d'Artificio) */}
-            <div className="confetti-container">
-                {confetti.map((c) => (
-                    <div
-                        key={c.id}
-                        className="confetto"
-                        style={{
-                            backgroundColor: c.color,
-                            width: c.size,
-                            height: c.size,
-                            left: c.x,
-                            top: c.y,
-                            transform: `translate(-50%, -50%) translate(${c.dx}px, ${c.dy}px) scale(${1 - (Date.now() - c.id) / 1800}) rotate(${c.rotation}deg)`,
-                            opacity: c.initialOpacity * (1 - (Date.now() - c.id) / 1800), // Fade out
-                            transition: 'transform 1.8s ease-out, opacity 1.8s ease-out', // Animazione più fluida
-                        }}
-                    ></div>
-                ))}
-            </div>
+            // Avvia/continua il loop di animazione se non è già attivo
+            if (!animationFrameIdConfetti) {
+                 animateConfetti();
+            }
+        }
 
-            {/* Custom Styles for Animation (Tailwind utility for blob animation, pulse) */}
-            <style>
-                {`
-                @keyframes blob {
-                    0% { transform: translate(0px, 0px) scale(1); }
-                    33% { transform: translate(30px, -50px) scale(1.1); }
-                    66% { transform: translate(-20px, 20px) scale(0.9); }
-                    100% { transform: translate(0px, 0px) scale(1); }
+        function animateConfetti(currentTime) {
+            const now = Date.now();
+            const duration = 1800; // 1.8 secondi
+            
+            // Pulisce le particelle morte e rimuove i loro elementi DOM
+            confettiParticles = confettiParticles.filter(c => {
+                const elapsed = now - c.startTime;
+                if (elapsed >= duration) {
+                    if (c.domElement) confettiContainer.removeChild(c.domElement);
+                    return false;
                 }
-                .animate-blob {
-                    animation: blob 7s infinite;
-                }
-                .animation-delay-2000 {
-                    animation-delay: 2s;
-                }
-                .hero-logo-pulse {
-                    animation: pulse-gold 3s ease-in-out infinite;
-                }
-                @keyframes pulse-gold {
-                    0%, 100% {
-                        box-shadow: 0 0 40px rgba(253, 224, 71, 0.4);
-                        transform: scale(1);
-                    }
-                    50% {
-                        box-shadow: 0 0 60px rgba(253, 224, 71, 0.6);
-                        transform: scale(1.03);
-                    }
-                }
+                return true;
+            });
+            
+            // Aggiorna la posizione e l'aspetto delle particelle vive
+            confettiParticles.forEach(c => {
+                const elapsed = now - c.startTime;
+                const progress = elapsed / duration;
                 
-                /* --- CONFETTI STYLES --- */
-                .confetti-container {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100vw;
-                    height: 100vh;
-                    pointer-events: none;
-                    z-index: 50;
-                }
-                .confetto {
-                    position: absolute;
-                    border-radius: 50%;
-                }
-                `}
-            </style>
-
-            <div className="relative z-10 max-w-5xl mx-auto px-6 py-8 flex flex-col min-h-screen">
+                const scale = 1 - progress * 0.5;
+                const opacity = 1 - progress;
                 
-                {/* Header */}
-                <header className="flex justify-between items-center py-4 mb-12">
-                    <div className="flex items-center space-x-3 text-2xl font-bold">
-                        <img src={logoUrl} alt="$GIFT Logo" className="w-10 h-10 rounded-full border-2 border-yellow-500" onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/40x40/ffd700/000?text=G"; }} />
-                        <span>$GIFT</span>
-                    </div>
-                    <a 
-                        href="https://pancakeswap.finance/swap" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="px-6 py-2 bg-white text-gray-900 font-semibold rounded-full shadow-lg hover:bg-gray-200 transition-all duration-300 transform hover:scale-105"
-                    >
-                        Buy Now
-                    </a>
-                </header>
+                // Aggiornamento DOM tramite transform (più veloce di left/top)
+                c.domElement.style.transform = `
+                    translate(-50%, -50%) 
+                    translate(${c.dx * progress * 5}px, ${c.dy * progress * 5}px) 
+                    scale(${scale}) 
+                    rotate(${c.rotation + progress * 360}deg)
+                `;
+                c.domElement.style.opacity = opacity;
+            });
 
-                {/* Main Content (Hero) */}
-                <main className="flex-grow flex flex-col items-center justify-center text-center py-10">
-                    
-                    {/* LOGO E CLICK CONFETTI: Aggiunto onClick */}
-                    <img 
-                        src={logoUrl} 
-                        alt="$GIFT Token" 
-                        className="w-32 h-32 rounded-full mb-8 hero-logo-pulse cursor-pointer"
-                        onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/128x128/ffd700/000?text=GIFT"; }}
-                        onClick={handleLogoClick}
-                    />
-                    
-                    <h1 className="text-6xl sm:text-7xl lg:text-8xl font-extrabold mb-4 leading-none tracking-tight">
-                        The 
-                        <span className="ml-3 bg-clip-text text-transparent bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500">
-                            Gift
-                        </span>
-                        <br className="sm:hidden"/> of Crypto
-                    </h1>
-                    
-                    <p className="text-lg sm:text-xl text-gray-400 max-w-xl mb-12">
-                        Spread the holiday spirit. A community-driven memecoin on BNB Chain. **Zero taxes.** Pure vibes.
-                    </p>
+            if (confettiParticles.length > 0) {
+                animationFrameIdConfetti = requestAnimationFrame(animateConfetti);
+            } else {
+                animationFrameIdConfetti = null;
+            }
+        }
 
-                    {/* Action Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-4 mb-16 w-full max-w-sm sm:max-w-none">
-                        <a 
-                            href="https://pancakeswap.finance/swap" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center space-x-2 px-8 py-4 bg-gradient-to-r from-red-600 to-red-400 text-white font-bold rounded-full shadow-xl shadow-red-500/30 transition-all duration-300 transform hover:scale-[1.02] active:scale-95"
-                        >
-                            <ShoppingCart className="w-5 h-5" />
-                            <span>Buy on PancakeSwap</span>
-                        </a>
-                        <a 
-                            href="https://dexscreener.com/bsc" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center space-x-2 px-8 py-4 bg-gray-800 text-white font-bold rounded-full border border-gray-700 transition-all duration-300 transform hover:border-yellow-500 hover:bg-gray-700 active:scale-95"
-                        >
-                            <LineChart className="w-5 h-5" />
-                            <span>View Chart</span>
-                        </a>
-                    </div>
 
-                    {/* Stats (Holder count removed) */}
-                    <div className="flex flex-wrap justify-center gap-x-12 gap-y-6 w-full max-w-2xl py-8 border-y border-gray-800 mb-16">
-                        <Stat value="1B" label="Total Supply" />
-                        <Stat value="0%" label="Tax (Buy/Sell)" />
-                        <Stat value="100%" label="LP Locked" />
-                    </div>
+        // 5. Gestione Eventi e Inizializzazione
+        logoElement.addEventListener('click', triggerConfetti);
+        logoElement.addEventListener('touchstart', triggerConfetti); // Supporto touch
+        copyButton.addEventListener('click', copyAddress);
 
-                    {/* Contract Address Card (New Modern Component with Copy Functionality) */}
-                    <div 
-                        className={`w-full max-w-lg p-6 rounded-xl transition-all duration-300 ${isContractHovered ? 'shadow-2xl shadow-yellow-500/20' : 'shadow-xl shadow-black/50'} bg-gray-800/50 backdrop-blur-sm border border-gray-800`}
-                        onMouseEnter={() => setIsContractHovered(true)}
-                        onMouseLeave={() => setIsContractHovered(false)}
-                    >
-                        <p className="text-xs text-gray-500 uppercase tracking-widest mb-3">Contract Address (BNB Chain)</p>
-                        <div className="flex items-center justify-center space-x-4 h-12">
-                            {isAddressAvailable ? (
-                                <span className="font-mono text-yellow-400 text-sm sm:text-base break-all select-all">
-                                    {contractAddress}
-                                </span>
-                            ) : (
-                                <span className="text-xl font-bold text-red-400">
-                                    In Arrivo Presto
-                                </span>
-                            )}
-                            
-                            <button 
-                                onClick={handleCopy}
-                                disabled={!isAddressAvailable}
-                                className={`flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full transition-colors duration-300 ${copyButtonClass}`}
-                                title={isAddressAvailable ? "Copia Indirizzo Contratto" : "Indirizzo non disponibile"}
-                            >
-                                {copyStatus === 'success' ? (
-                                    <span className="text-xl">✅</span>
-                                ) : (
-                                    <Copy className="w-5 h-5" />
-                                )}
-                            </button>
-                        </div>
-                        {copyStatus && isAddressAvailable && (
-                            <p className={`mt-3 text-sm font-medium transition-opacity ${copyStatus === 'success' ? 'text-green-400' : 'text-red-400'}`}>
-                                {copyStatus === 'success' ? 'Indirizzo copiato!' : 'Copia fallita.'}
-                            </p>
-                        )}
-                    </div>
-                </main>
+        // Funzione per l'hover della card del contratto (sottile effetto moderno)
+        const contractCard = document.getElementById('contract-card');
+        if (contractCard) {
+            // Animazione solo per l'ombra (Tailwind gestisce il resto)
+            contractCard.addEventListener('mouseenter', () => contractCard.classList.add('shadow-2xl', 'shadow-yellow-500/20'));
+            contractCard.addEventListener('mouseleave', () => contractCard.classList.remove('shadow-2xl', 'shadow-yellow-500/20'));
+        }
 
-                {/* Footer */}
-                <footer className="text-center pt-10 pb-4 border-t border-gray-900 mt-auto">
-                    <div className="flex justify-center space-x-6 mb-6">
-                        {/* Twitter Link - Ora con icona X */}
-                        <SocialLink 
-                            icon={<X className="w-6 h-6 text-white" />}
-                            url="#" 
-                            title="X"
-                            color="twitter" 
-                        />
-                        {/* Telegram Link */}
-                        <SocialLink 
-                            icon={<Send className="w-6 h-6 text-white" />} 
-                            url="#" 
-                            title="Telegram"
-                            color="telegram"
-                        />
-                        {/* DEX Tools Link */}
-                        <SocialLink 
-                            icon={<Zap className="w-6 h-6 text-yellow-400" />} 
-                            url="#" 
-                            title="DEX Tools"
-                            color="yellow"
-                        />
-                    </div>
-                    <p className="text-sm text-gray-600">
-                        &copy; {new Date().getFullYear()} $GIFT — The Gift of Crypto. All rights reserved.
-                    </p>
-                </footer>
+        // Avvia l'animazione della neve
+        window.onload = function() {
+             // Inizializza gli elementi DOM dei fiocchi di neve
+             for (let i = 0; i < 50; i++) {
+                snowFlakes.push(generateSnowflake());
+            }
 
-            </div>
-        </div>
-    );
-};
-
-// Componente per le statistiche
-const Stat = ({ value, label }) => (
-    <div className="flex flex-col items-center">
-        <div className="text-4xl font-extrabold text-yellow-400 mb-1">{value}</div>
-        <div className="text-xs uppercase tracking-wider text-gray-500">{label}</div>
-    </div>
-);
-
-// Componente per i link social
-const SocialLink = ({ icon, url, title, color }) => {
-    let baseClass = "w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-lg";
-    let styleClass = "";
-
-    switch (color) {
-        case 'telegram':
-            styleClass = "bg-[#2AABEE]/20 border border-[#2AABEE] text-[#2AABEE] hover:shadow-2xl hover:shadow-[#2AABEE]/50";
-            break;
-        case 'twitter':
-            styleClass = "bg-gray-900/50 border border-gray-800 text-white hover:border-white hover:shadow-2xl hover:shadow-white/50";
-            break;
-        case 'yellow':
-            styleClass = "bg-gray-800/50 border border-gray-700 text-yellow-400 hover:border-yellow-500 hover:shadow-2xl hover:shadow-yellow-500/50";
-            break;
-        default:
-            styleClass = "bg-gray-800 border border-gray-700 text-white hover:border-yellow-500";
-    }
-
-    return (
-        <a 
-            href={url} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            title={title}
-            className={`${baseClass} ${styleClass}`}
-        >
-            {icon}
-        </a>
-    );
-};
-
-export default App;
+            // Avvia i loop di animazione
+            animateSnow(0);
+            
+            // Re-render Lucide icons after load (important for HTML/JS)
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+            
+            // L'animazione Pulse Logo è ora in CSS/Tailwind: logoElement.classList.add('animate-pulse-gold');
+        };
+    </script>
+</body>
+</html>
